@@ -1,52 +1,107 @@
-base = {1: ('zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze',
-            'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'),
-        2: 'vinte', 3: 'trinta', 4: 'quarenta', 5: 'cincoeta', 6: 'sesenta', 7: 'setenta', 8: 'oitenta', 9: 'noventa',
-        'centena': ('cem', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos',
-                    'oitocentos', 'novecentos'),
-        'unidade_milhar': ('mil',),
-        'milhar': ('milhão', 'milhões', 'bilhão', 'bilhões')
-        }
+UNIDADES = ('zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove')
+DEZENA_ESPECIAL = ('', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove')
+DEZENAS = ('', 'dez', 'vinte', 'trinta', 'quarenta', 'cincoenta', 'sessenta', 'setenta', 'oitenta', 'noventa')
+CENTENAS = ('cem', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos','oitocentos', 'novecentos')
+MILHAR = (('milhão', 'milhões'), ('bilhão', 'bilhões'), ('trilhão', 'trilhões'), ('quatrilhão', 'quatrilhões'), ('quintilhão', 'quintilhões'),
+    ('sextilhão', 'sextilhões'), ('septilhão', 'septilhões'), ('octilhão', 'octilhões'), ('nonilhão', 'nonilhões'), ('decilhão', 'decilhões'),
+    ('unodecilhão', 'unodecilhões'), ('duodecilhão', 'duodecilhões'), ('tredecilhão', 'tredecilhões'), ('quatuordecilhão', 'quatuordecilhões'),
+    ('quindecilhão', 'quindecilhões'), ('sexdecilhão', 'sexdecilhões'), ('sepdecilhão', 'sepdecilhões'), ('octodecilhão', 'octodecilhões'),
+    ('novemdecilhão', 'novemdecilhões')
+)
+def unidade_dezena_centena(terno):
+    numero_extenso = ''
+    termos = len(terno)
+    digito = terno[0]
+    if termos == 3:
+        if digito != 0:
+            if terno[1:] == [0, 0]:
+                if digito == 1:
+                    numero_extenso += CENTENAS[0]
+                else:
+                    numero_extenso += CENTENAS[digito]
+            else:
+                numero_extenso += CENTENAS[digito] + ' e '
+                numero_extenso += unidade_dezena_centena(terno[1:])
+        else:
+            numero_extenso += unidade_dezena_centena(terno[1:])
+    if termos == 2:
+        if digito != 0:
+                if terno[1] == 0:
+                    numero_extenso += DEZENAS[digito]
+                elif digito == 1:
+                    numero_extenso += DEZENA_ESPECIAL[terno[1]]
+                else:
+                    numero_extenso += DEZENAS[digito] + ' e ' + unidade_dezena_centena(terno[1:])
+        else:
+            numero_extenso += unidade_dezena_centena(terno[1:])
+    elif termos == 1:
+        numero_extenso += UNIDADES[digito]
+
+    return numero_extenso
 
 
-def numero_por_extenso(numero):
+def milhares(ternos):
+    numero_extenso = ''
+    termos = len(ternos)
+    terno = ternos[0]
+    
+    if termos >= 3:
+        if terno != [0, 0, 0]:
+            if terno == [0, 0, 1] or terno == [1]:
+                numero_extenso += 'um ' + MILHAR[termos - 3][0]
+            else:
+                numero_extenso += unidade_dezena_centena(terno) + ' ' + MILHAR[termos - 3][1]
+
+            if ternos[1:] == [[0, 0, 0],[0, 0, 0]]:
+                return numero_extenso
+            else:
+                numero_extenso += ' ' + milhares(ternos[1:])
+        else:
+            numero_extenso += milhares(ternos[1:])
+
+    if termos == 2:
+        if terno != [0, 0, 0]: 
+            numero_extenso += unidade_dezena_centena(terno) + ' mil' 
+            if ternos[1] == [0, 0, 0]:
+                return numero_extenso
+            elif ternos[1][0]:
+                numero_extenso += ' ' + milhares(ternos[1:])
+            else:
+                numero_extenso += ' e ' + milhares(ternos[1:])
+        else:
+            numero_extenso += ' ' + milhares(ternos[1:])
+        
+    elif termos == 1:
+        if terno != [0, 0, 0]:
+            numero_extenso += unidade_dezena_centena(terno)
+
+    return numero_extenso
+
+
+
+def separar_casas(numero):
     digitos = list(str(numero))
     tamanho = len(digitos)
+
+    
+    casa = tamanho % 3
+    casas = []
+    terno = []
     for i in range(tamanho):
-        digitos[i] = int(digitos[i])
-
-    n_extenso = ''
-    for digito, i in zip(digitos, range(tamanho + 1)):
-        if i == tamanho - 3:
-            if digitos[i + 1:i + 3] == [0, 0]:
-                n_extenso += base['centena'][digito]
-                break
-            else:
-                n_extenso += base['centena'][digito] + ' e '
-        elif i == tamanho - 2:
-            if digito < 2:
-                n_extenso += base[1][int(digitos[i] * 10 + digitos[i + 1])]
-                break
-            else:
-                n_extenso += base[digito]
-                if digitos[i + 1] != 0:
-                    n_extenso += ' e '
-                else:
-                    break
-        elif i == tamanho - 1:
-            n_extenso += base[1][digitos[i]]
-
-    return n_extenso
-
-
-def imprimir_por_extenso():
+        terno.append(int(digitos[i]))
+        if (i + 1) % 3 == casa:
+            casas.append(terno)
+            terno = []
+    return casas
+        
+    
+if __name__ == '__main__':
+    
     while True:
         try:
-            numero = input('Digite um número inteiro: ')
-            print(numero_por_extenso(numero))
+            numero = int(input('Digite um número inteiro: '))
+            extenso = milhares(separar_casas(numero))
+            print(numero, extenso)
             break
         except ValueError:
-            print('ERRO!!', end='')
-
-
-if __name__ == '__main__':
-    imprimir_por_extenso()
+            print('ERRO!!', end=' ')
