@@ -1,3 +1,10 @@
+DECIMAIS = (('décimo', 'décimos'), ('centésimo', 'centésimos'), ('milésimo', 'milésimos'), ('décimo de milésimo', 'décimos de milésimo'),
+    ('centésimo de milésimo', 'centésimos de milésimo'), ('milionésimo', 'milionésimos'), ('décimo de milionésimo', 'décimos de milionésimo'),
+    ('centésimo de milionésimo', 'centésimos de milionésimo'), ('bilionésimo', 'bilionésimos'), ('décimo de bilionésimo', 'décimos de bilionésimo'), 
+    ('centésimo de bilionésimo', 'centésimos de bilionésimo'), ('trilionésimo', 'trilionésimos'), ('quatrilionésimo', 'quatrilionésimos'),
+    ('quintilionésimo', 'quintilionésimos'), ('sextilionésimo', 'sextilionésimos'), ('septilionésimo', 'septilionésimos'), ('octilionésimo', 'octilionésimos'),
+    ('nonilionésimo', 'nonilionésimos'), ('decilionésimo', 'decilionésimos')
+)
 UNIDADES = ('zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove')
 DEZENA_ESPECIAL = ('', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove')
 DEZENAS = ('', 'dez', 'vinte', 'trinta', 'quarenta', 'cincoenta', 'sessenta', 'setenta', 'oitenta', 'noventa')
@@ -93,14 +100,54 @@ def separar_casas(numero):
             casas.append(terno)
             terno = []
     return casas
+
+def numero_por_extenso(numero:float):
+    numero = str(numero).replace('.',',')
+    divisao = numero.split(',')
+    if len(divisao) == 1:
+        inteiro = int(divisao[0]) 
+        decimal = None
+    elif len(divisao) == 2:
+        inteiro = int(divisao[0])
+        decimal = divisao[1]
+    else:
+        raise ValueError('Número não formatado corretamente')
+    
+    extenso = milhares(separar_casas(inteiro))
+    if decimal != None and int(decimal) != 0:
+        while True:
+            if decimal[-1] == '0':
+                decimal = decimal[:-1]
+            else:
+                break
+        ordem = len(decimal)
+        if ordem > 12:
+            if ordem > 35:
+                raise ValueError("Valor decimal não pode ser escrito pela lib")
+            else:
+                ordem = 8 + ordem // 3 
+    
+        if inteiro == 0:
+            extenso = ''
+        elif inteiro == 1:
+            extenso += ' inteiro e '
+        else:
+            extenso += ' inteiros e '
+        if int(decimal) == 1:
+            plural = 0
+        else:
+            plural = 1
+        extenso += milhares(separar_casas(decimal)) + ' ' + DECIMAIS[ordem - 1][plural]
         
+
+    return extenso
     
 if __name__ == '__main__':
     
     while True:
         try:
-            numero = int(input('Digite um número inteiro: '))
-            extenso = milhares(separar_casas(numero))
+            numero = input('Digite um número inteiro: ')
+            extenso = numero_por_extenso(numero)
             print(numero, extenso)
             break
         except ValueError:
